@@ -2,7 +2,6 @@ const XP_PAGES = [
   { label: 'home',       path: '/my-page/' },
   { label: 'live',       path: '/my-page/live.html' },
   { label: 'blog',       path: '/my-page/blogposts/' },
-  { label: 'listening',  path: '/my-page/listening.html' },
   { label: 'colophon',   path: '/my-page/colophon.html' },
 ];
 
