@@ -237,3 +237,25 @@ body {
 .xp-row-key { color: #666; }
 .xp-row-val { color: #222; }
 .xp-tag { display: inline-block; font-size: 10px; background: #e8e0c8; border: 1px solid #b0a898; border-radius: 2px; padding: 0 5px; color: #555; margin-right: 3px; }
+
+#xp-content-area {
+  color: #000;
+}
+
+#xp-content-area * {
+  --bg: #ece9d8;
+  --bg2: #d8d3c0;
+  --border: rgba(0,0,0,0.1);
+  --text: #111;
+  --muted: #444;
+  --hint: #888;
+  --green: #1a6e1a;
+  --green-bg: #d4ecd4;
+  --green-text: #1a4e1a;
+  color: inherit;
+}
+
+#xp-content-area a { color: #0033aa; }
+#xp-content-area a:hover { color: #316ac5; }
+#xp-content-area .back { color: #666; }
+#xp-content-area .back:hover { color: #0033aa; }
