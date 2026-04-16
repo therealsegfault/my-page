@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>404 · segfault</title>
+  <link rel="stylesheet" href="xp.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -35,7 +36,9 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
+
+<div id="xp-page-content" style="display:none;">
+<div class="wrap">
     <div class="path">/dev/null/<span id="slug"></span><span class="cursor"></span></div>
     <div class="code">404</div>
     <div class="msg">that page doesn't exist here.</div>
@@ -45,5 +48,9 @@
     const slug = location.pathname.split('/').filter(Boolean).pop() || '';
     document.getElementById('slug').textContent = slug;
   </script>
+</div>
+
+<script src="xp-shell.js"></script>
+<script>xpInject({ title: '404 — therealsegfault', icon: 'page' });</script>
 </body>
 </html>

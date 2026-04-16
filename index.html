@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>segfault</title>
+  <link rel="stylesheet" href="xp.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -145,7 +146,9 @@
   </style>
 </head>
 <body>
-  <div class="page">
+
+<div id="xp-page-content" style="display:none;">
+<div class="page">
 
     <div class="sig">
       <div class="sig-name">segfault<span class="cursor"></span></div>
@@ -213,5 +216,9 @@
     </div>
 
   </div>
+</div>
+
+<script src="xp-shell.js"></script>
+<script>xpInject({ title: 'home — therealsegfault', icon: 'home' });</script>
 </body>
 </html>

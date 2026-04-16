@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>segfault · live</title>
+  <link rel="stylesheet" href="xp.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -68,6 +69,8 @@
   </style>
 </head>
 <body>
+
+<div id="xp-page-content" style="display:none;">
 <div class="page">
   <a class="back" href="index.html">therealsegfault</a>
   <div class="page-title">now<span style="color:var(--green);">_</span></div>
@@ -139,5 +142,9 @@ async function load() {
 load();
 setInterval(load, 60000);
 </script>
+</div>
+
+<script src="xp-shell.js"></script>
+<script>xpInject({ title: 'live — therealsegfault', icon: 'live' });</script>
 </body>
 </html>
