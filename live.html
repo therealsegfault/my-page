@@ -85,7 +85,7 @@
 <script>
 const REPO = 'therealsegfault/my-page';
 const FILE = 'nows.json';
-const RAW  = 'https://raw.githubusercontent.com/' + REPO + '/main/' + FILE;
+const API  = 'https://api.github.com/repos/' + REPO + '/contents/' + FILE;
 
 function timeAgo(iso) {
   const s = Math.round((Date.now() - new Date(iso)) / 1000);
@@ -103,8 +103,9 @@ function tagClass(t) {
 
 async function load() {
   try {
-    const r = await fetch(RAW + '?t=' + Date.now());
-    const nows = await r.json();
+    const r = await fetch(API, { headers: { 'Accept': 'application/vnd.github+json' } });
+    const meta = await r.json();
+    const nows = JSON.parse(atob(meta.content.replace(/\n/g, '')));
     if (!nows.length) return;
 
     const latest = nows[0];
