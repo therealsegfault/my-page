@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>segfault · listening</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0e0e;
+      --bg2: #161616;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8e8;
+      --muted: #888;
+      --hint: #555;
+      --green: #1D9E75;
+      --green-bg: #0a2e22;
+      --green-text: #5DCAA5;
+      --radius: 8px;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: 'Courier New', Courier, monospace; min-height: 100vh; }
+    .page { max-width: 640px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+    a.back { font-size: 12px; color: var(--hint); margin-bottom: 2.5rem; display: inline-block; text-decoration: none; }
+    a.back:hover { color: var(--green); }
+    a.back::before { content: '← '; }
+    .page-title { font-size: 28px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; margin-bottom: 4px; }
+    .page-sub { font-size: 12px; color: var(--hint); margin-bottom: 2.5rem; }
+    .page-sub span { color: var(--green); }
+
+    .now-playing {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--bg2); border: 0.5px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
+      min-height: 88px;
+    }
+    .now-playing.inactive { opacity: 0.4; }
+    .album-art {
+      width: 56px; height: 56px; border-radius: 6px;
+      background: var(--bg); flex-shrink: 0; object-fit: cover;
+    }
+    .album-art-placeholder {
+      width: 56px; height: 56px; border-radius: 6px;
+      background: var(--bg); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--hint);
+    }
+    .now-info { flex: 1; min-width: 0; }
+    .now-eyebrow { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); margin-bottom: 5px; }
+    .now-track { font-size: 16px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .now-artist { font-size: 13px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .playing-dot {
+      display: flex; gap: 3px; align-items: flex-end; height: 16px; flex-shrink: 0;
+    }
+    .playing-dot span {
+      display: block; width: 3px; background: var(--green); border-radius: 2px;
+      animation: eq 0.8s ease-in-out infinite;
+    }
+    .playing-dot span:nth-child(1) { height: 6px; animation-delay: 0s; }
+    .playing-dot span:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+    .playing-dot span:nth-child(3) { height: 8px; animation-delay: 0.3s; }
+    @keyframes eq { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
+
+    .section-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hint); margin-bottom: 0.75rem; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+
+    .track-list { display: flex; flex-direction: column; }
+    .track {
+      display: grid; grid-template-columns: 44px 1fr auto;
+      gap: 14px; padding: 11px 0; border-bottom: 0.5px solid var(--border); align-items: center;
+    }
+    .track:last-child { border-bottom: none; }
+    .track-art { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; background: var(--bg2); flex-shrink: 0; }
+    .track-info { min-width: 0; }
+    .track-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .track-artist { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .track-time { font-size: 11px; color: var(--hint); white-space: nowrap; }
+
+    .loading { font-size: 13px; color: var(--hint); padding: 2rem 0; }
+    .error   { font-size: 13px; color: #E24B4A; padding: 1rem 0; }
+
+    @media (max-width: 480px) {
+      .page { padding: 2rem 1.25rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="index.html">therealsegfault</a>
+  <div class="page-title">listening</div>
+  <div class="page-sub">what's been on · via <span>last.fm</span> · updates live</div>
+
+  <div id="now-playing" class="now-playing">
+    <div class="album-art-placeholder">♪</div>
+    <div class="now-info">
+      <div class="now-eyebrow">loading...</div>
+      <div class="now-track">—</div>
+      <div class="now-artist">—</div>
+    </div>
+  </div>
+
+  <div class="section-label">recent tracks</div>
+  <div id="track-list" class="track-list">
+    <div class="loading">fetching scrobbles...</div>
+  </div>
+</div>
+
+<script>
+const USER    = 'therealsegfault';
+const API_KEY = 'e7ba0f3a3d3d07f608739a938843e99a';
+const API     = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USER}&api_key=${API_KEY}&format=json&limit=20`;
+
+function timeAgo(uts) {
+  const s = Math.round(Date.now() / 1000 - uts);
+  if (s < 60)    return s + 's ago';
+  if (s < 3600)  return Math.round(s/60) + 'm ago';
+  if (s < 86400) return Math.round(s/3600) + 'h ago';
+  return Math.round(s/86400) + 'd ago';
+}
+
+function getArt(track, size) {
+  const img = track.image?.find(i => i.size === size);
+  return img?.['#text'] || '';
+}
+
+async function load() {
+  try {
+    const r = await fetch(API);
+    const data = await r.json();
+    const tracks = data.recenttracks?.track || [];
+    if (!tracks.length) return;
+
+    const nowPlaying = tracks[0]?.['@attr']?.nowplaying === 'true' ? tracks[0] : null;
+    const recent = nowPlaying ? tracks.slice(1) : tracks;
+
+    const npEl = document.getElementById('now-playing');
+    if (nowPlaying) {
+      const art = getArt(nowPlaying, 'medium');
+      npEl.classList.remove('inactive');
+      npEl.innerHTML = `
+        ${art ? `<img class="album-art" src="${art}" alt="" />` : '<div class="album-art-placeholder">♪</div>'}
+        <div class="now-info">
+          <div class="now-eyebrow">now playing</div>
+          <div class="now-track">${nowPlaying.name}</div>
+          <div class="now-artist">${nowPlaying.artist['#text']}</div>
+        </div>
+        <div class="playing-dot"><span></span><span></span><span></span></div>
+      `;
+    } else {
+      const last = tracks[0];
+      const art = getArt(last, 'medium');
+      npEl.classList.add('inactive');
+      npEl.innerHTML = `
+        ${art ? `<img class="album-art" src="${art}" alt="" />` : '<div class="album-art-placeholder">♪</div>'}
+        <div class="now-info">
+          <div class="now-eyebrow">last played</div>
+          <div class="now-track">${last.name}</div>
+          <div class="now-artist">${last.artist['#text']}</div>
+        </div>
+      `;
+    }
+
+    document.getElementById('track-list').innerHTML = recent.slice(0, 15).map(t => {
+      const art = getArt(t, 'small');
+      const ts  = t.date?.uts ? timeAgo(parseInt(t.date.uts)) : '';
+      return `
+        <div class="track">
+          ${art ? `<img class="track-art" src="${art}" alt="" />` : '<div class="track-art"></div>'}
+          <div class="track-info">
+            <div class="track-name">${t.name}</div>
+            <div class="track-artist">${t.artist['#text']}</div>
+          </div>
+          <div class="track-time">${ts}</div>
+        </div>
+      `;
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('track-list').innerHTML = '<div class="error">could not load scrobbles</div>';
+  }
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
