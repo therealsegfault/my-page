@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>post · segfault</title>
+  <link rel="stylesheet" href="../xp.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -47,6 +48,8 @@
   </style>
 </head>
 <body>
+
+<div id="xp-page-content" style="display:none;">
 <div class="page">
   <a class="back" href="index.html">blog</a>
   <div id="content"><div class="loading">loading post...</div></div>
@@ -109,5 +112,9 @@ async function load() {
 
 load();
 </script>
+</div>
+
+<script src="../xp-shell.js"></script>
+<script>xpInject({ title: 'post — therealsegfault', icon: 'blog' });</script>
 </body>
 </html>
