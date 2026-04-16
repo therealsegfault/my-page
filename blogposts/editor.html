@@ -176,22 +176,19 @@
     <button class="tb-btn" onclick="insertBlock('```\n','\n```')">block</button>
     <button class="tb-btn" onclick="insertHeading()">h2</button>
     <button class="tb-btn" onclick="insertLink()">link</button>
+    <button class="tb-btn" onclick="insertImage()">img</button>
+    <button class="tb-btn" onclick="insertVideo()">vid</button>
+    <button class="tb-btn" onclick="insertAudio()">aud</button>
     <button class="tb-btn" onclick="insertHR()">—</button>
   </div>
 
   <textarea id="body-input" placeholder="write something..."></textarea>
-
-  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-    drop images / files here or click to upload · auto-uploads to catbox
-    <input type="file" id="file-input" multiple accept="image/*,video/*,.pdf,.zip,.mp3" />
-  </div>
-  <div class="attachments" id="attachments"></div>
 </div>
 
 <div class="error-toast" id="error-toast"></div>
 
 <script>
-const CORRECT_PIN = '171975';
+const CORRECT_PIN = 'REPLACE_ME';
 const GH_TOKEN_KEY = 'inow_token';
 const OWNER = 'therealsegfault', REPO = 'my-page';
 const POSTS_INDEX = 'blogposts/index.json';
@@ -280,6 +277,31 @@ function insertHeading() {
   const ta = document.getElementById('body-input');
   const s = ta.selectionStart;
   ta.value = ta.value.slice(0, s) + '\n## ' + ta.value.slice(s);
+  ta.focus();
+}
+function insertVideo() {
+  const url = prompt('video url (catbox.moe or googleusercontent):');
+  if (!url) return;
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + `<video controls src="${url}" style="max-width:100%;border-radius:8px;"></video>` + ta.value.slice(s);
+  ta.focus();
+}
+function insertAudio() {
+  const url = prompt('audio url (catbox.moe or googleusercontent):');
+  if (!url) return;
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + `<audio controls src="${url}" style="width:100%;margin:1rem 0;"></audio>` + ta.value.slice(s);
+  ta.focus();
+}
+function insertImage() {
+  const url = prompt('image url (upload to catbox.moe first):');
+  if (!url) return;
+  const alt = prompt('alt text (optional):') || '';
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + `![${alt}](${url})` + ta.value.slice(s);
   ta.focus();
 }
 function insertLink() {

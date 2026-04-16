@@ -78,6 +78,8 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString([], {month:'long', day:'numeric', year:'numeric'});
 }
 
+marked.setOptions({ breaks: true, gfm: true });
+
 async function load() {
   if (!file) { document.getElementById('content').innerHTML = '<div class="error">no post specified</div>'; return; }
   try {
