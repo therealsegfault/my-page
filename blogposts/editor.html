@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>new post · segfault</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --text: #111;
+      --muted: #999;
+      --hint: #ccc;
+      --border: #efefef;
+      --green: #1D9E75;
+      --red: #E24B4A;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { min-height: 100vh; background: #fff; color: var(--text); font-family: 'Courier New', Courier, monospace; }
+    .page { max-width: 720px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; }
+    .back { font-size: 12px; color: var(--hint); text-decoration: none; }
+    .back:hover { color: var(--text); }
+    .back::before { content: '← '; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    .field { margin-bottom: 1.5rem; }
+    .field label { display: block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hint); margin-bottom: 6px; }
+    .field input[type=text] {
+      width: 100%; border: none; border-bottom: 1px solid var(--border);
+      outline: none; font-family: 'Courier New', monospace;
+      color: var(--text); background: transparent; padding: 6px 0;
+      font-size: 15px;
+    }
+    .field input[type=text]:focus { border-bottom-color: var(--text); }
+
+    #title-input { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+    #subtitle-input { font-size: 16px; color: var(--muted); }
+
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .tag-pill {
+      font-size: 11px; color: #085041; background: #E1F5EE;
+      border-radius: 6px; padding: 3px 10px; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tag-pill .remove { color: #1D9E75; font-size: 13px; line-height: 1; }
+    .tag-pill .remove:hover { color: #E24B4A; }
+    #tag-input {
+      border: none; outline: none; font-family: 'Courier New', monospace;
+      font-size: 12px; color: var(--text); background: transparent;
+      min-width: 80px;
+    }
+
+    .toolbar {
+      display: flex; gap: 4px; flex-wrap: wrap;
+      padding: 8px 0; border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border); margin-bottom: 0;
+    }
+    .tb-btn {
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: var(--muted); background: none; border: none;
+      cursor: pointer; padding: 4px 8px; border-radius: 4px;
+    }
+    .tb-btn:hover { background: var(--border); color: var(--text); }
+
+    #body-input {
+      width: 100%; min-height: 400px; border: none; outline: none;
+      resize: none; font-family: 'Courier New', Courier, monospace;
+      font-size: 15px; color: var(--text); line-height: 1.8;
+      background: transparent; padding: 1.5rem 0;
+      caret-color: var(--green);
+    }
+    #body-input::placeholder { color: var(--hint); }
+
+    .drop-zone {
+      border: 1.5px dashed var(--border); border-radius: 8px;
+      padding: 1.5rem; text-align: center; margin-top: 1rem;
+      font-size: 12px; color: var(--hint); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone.drag-over { border-color: var(--green); background: #f0faf6; }
+    .drop-zone input { display: none; }
+
+    .attachments { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 6px; }
+    .attachment {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+      padding: 6px 10px; background: #f9f9f9; border-radius: 6px;
+    }
+    .attachment .att-url { flex: 1; color: var(--green); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .attachment .att-copy { cursor: pointer; color: var(--hint); font-size: 11px; }
+    .attachment .att-copy:hover { color: var(--text); }
+    .attachment .att-insert { cursor: pointer; color: var(--green); font-size: 11px; }
+    .uploading { font-size: 12px; color: var(--hint); padding: 4px 0; }
+
+    .post-btn {
+      font-family: 'Courier New', monospace; font-size: 14px; font-weight: 600;
+      color: #fff; background: var(--text); border: none; border-radius: 20px;
+      padding: 10px 28px; cursor: pointer; transition: background 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .post-btn:disabled { background: var(--hint); cursor: default; }
+    .post-btn.success { background: var(--green); }
+
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-toast {
+      display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--red); color: #fff; font-size: 12px;
+      padding: 8px 16px; border-radius: 20px; white-space: nowrap; z-index: 99;
+    }
+    .error-toast.show { display: block; }
+
+    .pin-overlay {
+      position: fixed; inset: 0; background: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; z-index: 100; padding: 2rem;
+    }
+    .pin-overlay p { font-size: 14px; color: var(--muted); }
+    .pin-overlay input {
+      font-family: 'Courier New', monospace; font-size: 18px;
+      border: none; border-bottom: 1px solid var(--border);
+      outline: none; text-align: center; padding: 8px 0; width: 160px;
+      background: transparent;
+    }
+    .pin-overlay input:focus { border-bottom-color: var(--text); }
+    .pin-overlay button {
+      font-family: 'Courier New', monospace; font-size: 13px; font-weight: 600;
+      color: #fff; background: var(--text); border: none; border-radius: 20px;
+      padding: 10px 28px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="pin-overlay" id="pin-overlay">
+  <span style="font-size:22px;font-weight:600;letter-spacing:-0.02em;">new post</span>
+  <p>enter your pin</p>
+  <input type="password" id="pin-input" placeholder="••••••" autocomplete="off" />
+  <button onclick="checkPin()">continue</button>
+</div>
+
+<div class="page">
+  <div class="topbar">
+    <a class="back" href="index.html">blog</a>
+    <div class="topbar-actions">
+      <span style="font-size:11px;color:var(--hint);" id="status-text"></span>
+      <button class="post-btn" id="post-btn" onclick="publish()">
+        <span id="post-label">publish</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>title</label>
+    <input type="text" id="title-input" placeholder="what's this about" autocorrect="off" spellcheck="true" />
+  </div>
+
+  <div class="field">
+    <label>subtitle</label>
+    <input type="text" id="subtitle-input" placeholder="a little more context" autocorrect="off" spellcheck="true" />
+  </div>
+
+  <div class="field">
+    <label>tags</label>
+    <div class="tags-row" id="tags-row">
+      <input type="text" id="tag-input" placeholder="add tag..." />
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="tb-btn" onclick="wrap('**','**')">b</button>
+    <button class="tb-btn" onclick="wrap('*','*')"><em>i</em></button>
+    <button class="tb-btn" onclick="wrap('`','`')">code</button>
+    <button class="tb-btn" onclick="insertBlock('```\n','\n```')">block</button>
+    <button class="tb-btn" onclick="insertHeading()">h2</button>
+    <button class="tb-btn" onclick="insertLink()">link</button>
+    <button class="tb-btn" onclick="insertHR()">—</button>
+  </div>
+
+  <textarea id="body-input" placeholder="write something..."></textarea>
+
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    drop images / files here or click to upload · auto-uploads to catbox
+    <input type="file" id="file-input" multiple accept="image/*,video/*,.pdf,.zip,.mp3" />
+  </div>
+  <div class="attachments" id="attachments"></div>
+</div>
+
+<div class="error-toast" id="error-toast"></div>
+
+<script>
+const CORRECT_PIN = 'REPLACE_ME';
+const GH_TOKEN_KEY = 'inow_token';
+const OWNER = 'therealsegfault', REPO = 'my-page';
+const POSTS_INDEX = 'blogposts/index.json';
+
+let tags = [];
+let token = localStorage.getItem(GH_TOKEN_KEY) || '';
+
+function checkPin() {
+  const val = document.getElementById('pin-input').value;
+  if (val === CORRECT_PIN) {
+    document.getElementById('pin-overlay').style.display = 'none';
+    document.getElementById('title-input').focus();
+  } else {
+    showError('wrong pin');
+    document.getElementById('pin-input').value = '';
+  }
+}
+document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+if (localStorage.getItem('inow_authed')) {
+  document.getElementById('pin-overlay').style.display = 'none';
+  document.getElementById('title-input').focus();
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
+
+// Tags
+const tagInput = document.getElementById('tag-input');
+tagInput.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ',') && tagInput.value.trim()) {
+    e.preventDefault();
+    addTag(tagInput.value.trim().replace(/,/g,''));
+    tagInput.value = '';
+  }
+  if (e.key === 'Backspace' && !tagInput.value && tags.length) {
+    removeTag(tags[tags.length-1]);
+  }
+});
+
+function addTag(t) {
+  if (!t || tags.includes(t)) return;
+  tags.push(t);
+  renderTags();
+}
+function removeTag(t) {
+  tags = tags.filter(x => x !== t);
+  renderTags();
+}
+function renderTags() {
+  const row = document.getElementById('tags-row');
+  row.innerHTML = '';
+  tags.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill';
+    pill.innerHTML = `${t}<span class="remove" onclick="removeTag('${t}')">×</span>`;
+    row.appendChild(pill);
+  });
+  row.appendChild(tagInput);
+  tagInput.focus();
+}
+
+// Toolbar
+function wrap(before, after) {
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || 'text';
+  ta.value = ta.value.slice(0, s) + before + sel + after + ta.value.slice(e);
+  ta.focus();
+  ta.setSelectionRange(s + before.length, s + before.length + sel.length);
+}
+function insertBlock(before, after) {
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  const sel = ta.value.slice(s, ta.selectionEnd) || 'code here';
+  ta.value = ta.value.slice(0, s) + before + sel + after + ta.value.slice(ta.selectionEnd);
+  ta.focus();
+}
+function insertHeading() {
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + '\n## ' + ta.value.slice(s);
+  ta.focus();
+}
+function insertLink() {
+  const url = prompt('url:');
+  if (!url) return;
+  wrap('[', `](${url})`);
+}
+function insertHR() {
+  const ta = document.getElementById('body-input');
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + '\n\n---\n\n' + ta.value.slice(s);
+  ta.focus();
+}
+
+// File upload to Catbox
+async function uploadToCatbox(file) {
+  const fd = new FormData();
+  fd.append('reqtype', 'fileupload');
+  fd.append('fileToUpload', file);
+  const r = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd });
+  const url = await r.text();
+  if (!url.startsWith('https://')) throw new Error('catbox upload failed');
+  return url.trim();
+}
+
+function addAttachment(name, url) {
+  const el = document.createElement('div');
+  el.className = 'attachment';
+  el.innerHTML = `<span>${name}</span><span class="att-url">${url}</span><span class="att-insert" onclick="insertAttachment('${name}','${url}')">insert</span><span class="att-copy" onclick="navigator.clipboard.writeText('${url}')">copy</span>`;
+  document.getElementById('attachments').appendChild(el);
+}
+
+function insertAttachment(name, url) {
+  const ta = document.getElementById('body-input');
+  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(url);
+  const md = isImage ? `![${name}](${url})` : `[${name}](${url})`;
+  const s = ta.selectionStart;
+  ta.value = ta.value.slice(0, s) + md + ta.value.slice(s);
+  ta.focus();
+}
+
+async function handleFiles(files) {
+  for (const file of files) {
+    const uploading = document.createElement('div');
+    uploading.className = 'uploading';
+    uploading.textContent = `uploading ${file.name}...`;
+    document.getElementById('attachments').appendChild(uploading);
+    try {
+      const url = await uploadToCatbox(file);
+      uploading.remove();
+      addAttachment(file.name, url);
+    } catch(e) {
+      uploading.remove();
+      showError(`failed to upload ${file.name}`);
+    }
+  }
+}
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+// GitHub API helpers
+async function ghHeaders() {
+  return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+}
+async function ghGet(path) {
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, { headers: await ghHeaders() });
+  return r.json();
+}
+async function ghPut(path, content, message, sha) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(content))), ...(sha ? {sha} : {}) };
+  const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
+    method: 'PUT', headers: await ghHeaders(), body: JSON.stringify(body)
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.message || 'github write failed');
+  return data;
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+async function publish() {
+  const title    = document.getElementById('title-input').value.trim();
+  const subtitle = document.getElementById('subtitle-input').value.trim();
+  const body     = document.getElementById('body-input').value.trim();
+  if (!title) { showError('title required'); return; }
+  if (!body)  { showError('body required'); return; }
+
+  const btn   = document.getElementById('post-btn');
+  const label = document.getElementById('post-label');
+  btn.disabled = true;
+  label.innerHTML = '<div class="spinner"></div>';
+  setStatus('publishing...');
+
+  try {
+    const now   = new Date();
+    const iso   = now.toISOString();
+    const date  = iso.slice(0,10);
+    const slug  = slugify(title);
+    const fname = `blogposts/posts/${date}-${slug}.md`;
+
+    const frontmatter = `---\ntitle: ${title}\nsubtitle: ${subtitle}\ndate: ${iso}\ntags: [${tags.map(t=>`"${t}"`).join(', ')}]\n---\n\n`;
+    const postContent = frontmatter + body;
+
+    // write post file
+    await ghPut(fname, postContent, `post: ${title}`);
+
+    // update index
+    let indexSha = null;
+    let index = [];
+    try {
+      const idxMeta = await ghGet(POSTS_INDEX);
+      indexSha = idxMeta.sha;
+      index = JSON.parse(atob(idxMeta.content.replace(/\n/g,'')));
+    } catch(e) {}
+
+    index.unshift({ title, subtitle, slug, date, tags, file: fname });
+    if (index.length > 200) index = index.slice(0, 200);
+    await ghPut(POSTS_INDEX, JSON.stringify(index, null, 2), `index: add ${title}`, indexSha);
+
+    btn.classList.add('success');
+    label.textContent = '✓';
+    setStatus('published!');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+
+  } catch(e) {
+    showError(e.message);
+    btn.disabled = false;
+    label.textContent = 'publish';
+    setStatus('');
+  }
+}
+</script>
+</body>
+</html>
