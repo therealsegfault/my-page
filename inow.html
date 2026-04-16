@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="iNow" />
+  <link rel="manifest" href="manifest.json" />
+  <title>iNow</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --text: #111;
+      --muted: #999;
+      --hint: #ccc;
+      --border: #efefef;
+      --green: #1D9E75;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body {
+      height: 100%;
+      background: #fff;
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+    .screen { display: none; flex-direction: column; height: 100dvh; padding-top: env(safe-area-inset-top, 0px); }
+    .screen.active { display: flex; }
+
+    .compose-header, .feed-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 12px; border-bottom: 1px solid var(--border);
+    }
+    .app-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+    .feed-btn, .back-btn {
+      font-size: 13px; color: var(--muted); background: none;
+      border: none; cursor: pointer; font-family: inherit; padding: 4px 0;
+    }
+    .feed-btn:hover, .back-btn:hover { color: var(--text); }
+    .back-btn::before { content: '← '; }
+
+    .compose-body { flex: 1; display: flex; flex-direction: column; padding: 28px 24px 0; overflow: hidden; }
+    #now-input {
+      width: 100%; flex: 1; border: none; outline: none; resize: none;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 20px; font-weight: 300; color: var(--text);
+      line-height: 1.6; background: transparent; caret-color: var(--green);
+    }
+    #now-input::placeholder { color: var(--hint); }
+
+    .compose-footer {
+      padding: 16px 24px; padding-bottom: calc(16px + var(--safe-bottom));
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .char-count { font-size: 12px; color: var(--hint); }
+    .char-count.warn { color: #E24B4A; }
+
+    .post-btn {
+      font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: 600;
+      color: #fff; background: var(--text); border: none; border-radius: 20px;
+      padding: 10px 24px; cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .post-btn:disabled { background: var(--hint); cursor: default; }
+    .post-btn.success { background: var(--green); }
+    .post-btn:active:not(:disabled) { transform: scale(0.97); }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .feed-list { flex: 1; overflow-y: auto; padding: 0 24px; -webkit-overflow-scrolling: touch; }
+    .feed-item {
+      display: grid; grid-template-columns: 52px 1fr; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--border); align-items: start;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-ago { font-size: 11px; color: var(--muted); padding-top: 3px; white-space: nowrap; }
+    .feed-text { font-size: 14px; font-weight: 300; color: var(--text); line-height: 1.55; }
+    .feed-empty { padding: 48px 0; text-align: center; font-size: 13px; color: var(--hint); }
+
+    .error-toast {
+      display: none; position: fixed;
+      bottom: calc(24px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+      background: #E24B4A; color: #fff; font-size: 12px;
+      padding: 8px 16px; border-radius: 20px; white-space: nowrap; z-index: 99;
+    }
+    .error-toast.show { display: block; }
+
+    .token-setup {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 24px; gap: 16px; text-align: center;
+    }
+    .token-setup p { font-size: 14px; color: var(--muted); line-height: 1.7; font-family: sans-serif; }
+    .token-setup input {
+      width: 100%; font-family: 'Courier New', monospace; font-size: 13px;
+      padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px;
+      outline: none; color: var(--text);
+    }
+    .token-setup input:focus { border-color: var(--green); }
+    .save-token-btn {
+      font-family: 'Courier New', monospace; font-size: 14px; font-weight: 600;
+      color: #fff; background: var(--text); border: none; border-radius: 20px;
+      padding: 12px 32px; cursor: pointer; width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="screen" id="screen-pin">
+  <div class="compose-header"><span class="app-title">iNow</span></div>
+  <div class="token-setup">
+    <p>enter your pin</p>
+    <input type="password" id="pin-input" placeholder="••••••" autocomplete="off" inputmode="numeric" />
+    <button class="save-token-btn" onclick="checkPin()">continue</button>
+  </div>
+</div>
+
+<div class="screen active" id="screen-setup">
+  <div class="compose-header"><span class="app-title">iNow</span></div>
+  <div class="token-setup">
+    <p>paste your github personal access token<br/>(needs <code>repo</code> scope)</p>
+    <input type="password" id="token-input" placeholder="ghp_..." autocomplete="off" autocorrect="off" spellcheck="false" />
+    <button class="save-token-btn" onclick="saveToken()">save & continue</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-compose">
+  <div class="compose-header">
+    <span class="app-title">iNow</span>
+    <button class="feed-btn" onclick="showFeed()">log →</button>
+  </div>
+  <div class="compose-body">
+    <textarea id="now-input" placeholder="what are you doing right now..." maxlength="280"></textarea>
+  </div>
+  <div class="compose-footer">
+    <span class="char-count" id="char-count">280</span>
+    <button class="post-btn" id="post-btn" onclick="post()" disabled>
+      <span id="post-label">post</span>
+    </button>
+  </div>
+</div>
+
+<div class="screen" id="screen-feed">
+  <div class="feed-header">
+    <button class="back-btn" onclick="showCompose()">compose</button>
+    <span class="app-title">log</span>
+    <button class="feed-btn" onclick="loadFeed()">refresh</button>
+  </div>
+  <div class="feed-list" id="feed-list"><div class="feed-empty">loading...</div></div>
+</div>
+
+<div class="error-toast" id="error-toast"></div>
+
+<script>
+const OWNER = 'therealsegfault', REPO = 'my-page', FILE = 'nows.json';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${FILE}`;
+
+let token = localStorage.getItem('inow_token') || '';
+let nows = [];
+
+function timeAgo(iso) {
+  const s = Math.round((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.round(s/60) + 'm';
+  if (s < 86400) return Math.round(s/3600) + 'h';
+  return Math.round(s/86400) + 'd';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showCompose() { showScreen('screen-compose'); document.getElementById('now-input').focus(); }
+function showFeed() { showScreen('screen-feed'); loadFeed(); }
+
+function checkPin() {
+  const val = document.getElementById('pin-input').value;
+  if (val === CORRECT_PIN) {
+    localStorage.setItem('inow_authed', '1');
+    if (token) { showCompose(); loadNows(); }
+    else { showScreen('screen-setup'); }
+  } else {
+    showError('wrong pin');
+    document.getElementById('pin-input').value = '';
+  }
+}
+
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (!t) return;
+  localStorage.setItem('inow_token', t);
+  token = t;
+  showCompose();
+  loadNows();
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+async function headers() {
+  return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+}
+
+async function loadNows() {
+  try {
+    const r = await fetch(RAW + '?t=' + Date.now());
+    nows = await r.json();
+  } catch(e) { nows = []; }
+}
+
+async function loadFeed() {
+  document.getElementById('feed-list').innerHTML = '<div class="feed-empty">loading...</div>';
+  await loadNows();
+  const el = document.getElementById('feed-list');
+  if (!nows.length) { el.innerHTML = '<div class="feed-empty">nothing yet</div>'; return; }
+  el.innerHTML = nows.map(n => `<div class="feed-item"><div class="feed-ago">${timeAgo(n.ts)}</div><div class="feed-text">${n.text}</div></div>`).join('');
+}
+
+async function post() {
+  const input = document.getElementById('now-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const btn = document.getElementById('post-btn');
+  const label = document.getElementById('post-label');
+  btn.disabled = true;
+  label.innerHTML = '<div class="spinner"></div>';
+  try {
+    const metaR = await fetch(API, { headers: await headers() });
+    const meta = await metaR.json();
+    if (!metaR.ok) throw new Error(meta.message || 'fetch failed');
+    const existing = JSON.parse(atob(meta.content.replace(/\n/g, '')));
+    const entry = { text, ts: new Date().toISOString() };
+    const updated = [entry, ...existing].slice(0, 50);
+    const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(updated, null, 2))));
+    const putR = await fetch(API, {
+      method: 'PUT', headers: await headers(),
+      body: JSON.stringify({ message: `now: ${text.slice(0, 60)}`, content: newContent, sha: meta.sha })
+    });
+    if (!putR.ok) { const err = await putR.json(); throw new Error(err.message || 'commit failed'); }
+    nows = updated;
+    input.value = '';
+    updateCharCount();
+    btn.classList.add('success');
+    label.textContent = '✓';
+    setTimeout(() => { btn.classList.remove('success'); label.textContent = 'post'; btn.disabled = false; }, 1500);
+  } catch(e) {
+    showError(e.message);
+    btn.disabled = false;
+    label.textContent = 'post';
+  }
+}
+
+const input = document.getElementById('now-input');
+const postBtn = document.getElementById('post-btn');
+function updateCharCount() {
+  const rem = 280 - input.value.length;
+  const el = document.getElementById('char-count');
+  el.textContent = rem;
+  el.classList.toggle('warn', rem < 20);
+  postBtn.disabled = input.value.trim().length === 0;
+}
+input.addEventListener('input', updateCharCount);
+input.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) post(); });
+
+const CORRECT_PIN = 'REPLACE_ME';
+
+if (token) { showCompose(); loadNows(); }
+else if (!localStorage.getItem('inow_authed')) { showScreen('screen-pin'); }
+else { showScreen('screen-setup'); }
+</script>
+</body>
+</html>
