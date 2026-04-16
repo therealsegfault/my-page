@@ -1,5 +1,18 @@
 [
   {
+    "title": "test image",
+    "subtitle": "a test image for my blog",
+    "slug": "test-image",
+    "date": "2026-04-16",
+    "tags": [
+      "images",
+      "update",
+      "blog",
+      "webdev"
+    ],
+    "file": "blogposts/posts/2026-04-16-test-image.md"
+  },
+  {
     "title": "test post",
     "subtitle": "this is a test of my brand new blog",
     "slug": "test-post",
