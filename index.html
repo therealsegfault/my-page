@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>segfault</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e0e;
+      --bg2: #161616;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8e8;
+      --muted: #888;
+      --hint: #555;
+      --green: #1D9E75;
+      --green-bg: #0a2e22;
+      --green-text: #5DCAA5;
+      --radius: 8px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    .sig { margin-bottom: 2rem; }
+    .sig-name {
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .sig-handle {
+      font-size: 13px;
+      color: var(--hint);
+      margin-top: 8px;
+    }
+    .sig-handle span { color: var(--green); }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 28px;
+      background: var(--green);
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .status-text { font-size: 12px; color: var(--hint); }
+
+    .bio {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.85;
+      max-width: 540px;
+      margin-bottom: 2.5rem;
+    }
+    .bio strong { color: var(--text); font-weight: 500; }
+
+    .section { margin-bottom: 2.25rem; }
+    .section-label {
+      font-size: 11px;
+      color: var(--hint);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      padding-bottom: 6px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .project-list { display: flex; flex-direction: column; }
+    .project {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      padding: 11px 0;
+      border-bottom: 0.5px solid var(--border);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .project:last-child { border-bottom: none; }
+    .project:hover .proj-name { color: var(--green); }
+    .proj-name {
+      font-size: 14px;
+      color: var(--text);
+      transition: color 0.15s;
+    }
+    .proj-desc {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12px;
+      color: var(--hint);
+      margin-top: 3px;
+    }
+    .proj-tag { font-size: 11px; color: var(--hint); }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 11px;
+      color: var(--green-text);
+      background: var(--green-bg);
+      border-radius: var(--radius);
+      padding: 3px 10px;
+    }
+
+    .links-row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .ext-link {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .ext-link:hover { color: var(--green); }
+    .ext-link::before { content: '→ '; color: var(--green); }
+
+    @media (max-width: 480px) {
+      .page { padding: 2rem 1.25rem 4rem; }
+      .sig-name { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="sig">
+      <div class="sig-name">segfault<span class="cursor"></span></div>
+      <div class="sig-handle">~/<span>home</span> &nbsp;·&nbsp; bremerton, wa</div>
+    </div>
+
+    <div class="status-row">
+      <div class="dot"></div>
+      <div class="status-text">currently: building in public · tuning vocals · running servers</div>
+    </div>
+
+    <p class="bio">
+      i make things that probably shouldn't work but do.<br>
+      running <strong>rift anarchy</strong> — a minecraft server with a world border that shrinks instead of grows.
+      producing vocaloid music with synthesized singers.
+      living on <strong>linux</strong>, writing bots, occasionally reading kernel docs for fun.
+    </p>
+
+    <div class="section">
+      <div class="section-label">projects</div>
+      <div class="project-list">
+        <a class="project" href="https://rift.rs" target="_blank" rel="noopener">
+          <div>
+            <div class="proj-name">rift anarchy</div>
+            <div class="proj-desc">minecraft anarchy server · seasonal world border · discord bot (nifty)</div>
+          </div>
+          <div class="proj-tag">live ↗</div>
+        </a>
+        <div class="project" style="cursor:default;">
+          <div>
+            <div class="proj-name">nifty</div>
+            <div class="proj-desc">discord.js bot · application management · season automation</div>
+          </div>
+          <div class="proj-tag">wip</div>
+        </div>
+        <div class="project" style="cursor:default;">
+          <div>
+            <div class="proj-name">vocaloid stuff</div>
+            <div class="proj-desc">synthesizer v · solaria · teto · gumi · logic pro · coming soon</div>
+          </div>
+          <div class="proj-tag">soon</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">stack</div>
+      <div class="tag-row">
+        <span class="tag">linux</span>
+        <span class="tag">node.js</span>
+        <span class="tag">discord.js</span>
+        <span class="tag">paper mc</span>
+        <span class="tag">synthesizer v</span>
+        <span class="tag">logic pro</span>
+        <span class="tag">bash</span>
+        <span class="tag">nginx</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">find me</div>
+      <div class="links-row">
+        <a class="ext-link" href="https://github.com" target="_blank" rel="noopener">github</a>
+        <a class="ext-link" href="https://discord.com" target="_blank" rel="noopener">discord</a>
+        <a class="ext-link" href="https://rift.rs" target="_blank" rel="noopener">rift.rs</a>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
