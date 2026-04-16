@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>segfault</title>
+  <link rel="stylesheet" href="xp.css" />
+</head>
+<body>
+
+<div id="xp-page-content" style="display:none;">
+  <div class="xp-menubar">
+    <div class="xp-menu-item">file</div>
+    <div class="xp-menu-item">view</div>
+    <div class="xp-menu-item">help</div>
+  </div>
+  <div class="xp-body">
+    <div class="xp-sidebar">
+      <div class="xp-sidebar-section">
+        <div class="xp-sidebar-title">pages</div>
+        <a class="xp-sidebar-item active" href="/my-page/">home</a>
+        <a class="xp-sidebar-item" href="/my-page/live.html">live</a>
+        <a class="xp-sidebar-item" href="/my-page/blogposts/">blog</a>
+        <a class="xp-sidebar-item" href="/my-page/listening.html">listening</a>
+        <a class="xp-sidebar-item" href="/my-page/colophon.html">colophon</a>
+      </div>
+      <div class="xp-sidebar-section">
+        <div class="xp-sidebar-title">elsewhere</div>
+        <a class="xp-sidebar-item" href="https://github.com/therealsegfault" target="_blank">github</a>
+        <a class="xp-sidebar-item" href="https://rift.rs" target="_blank">rift.rs</a>
+      </div>
+    </div>
+    <div class="xp-content">
+      <div style="padding: 8px 0 16px;">
+        <div style="font-size:22px;font-weight:700;color:#000;letter-spacing:-0.01em;margin-bottom:4px;">segfault</div>
+        <div style="font-size:12px;color:#666;font-family:'Courier New',monospace;margin-bottom:20px;">~/home &nbsp;·&nbsp; bremerton, wa</div>
+
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:20px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#3c8f3c;border:1px solid #2a6e2a;box-shadow:0 0 0 2px rgba(60,143,60,0.2);"></div>
+          <div style="font-size:12px;color:#444;">currently: building in public · tuning vocals · running servers</div>
+        </div>
+
+        <div class="xp-prose" style="max-width:520px;margin-bottom:20px;">
+          <p>i make things that probably shouldn't work but do.</p>
+          <p>running <strong>rift anarchy</strong> — a minecraft server with a world border that shrinks instead of grows. producing vocaloid music with synthesized singers. living on <strong>linux</strong>, writing bots, occasionally reading kernel docs for fun.</p>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="xp-content-title">projects</div>
+          <div class="xp-row">
+            <div class="xp-row-key">rift anarchy</div>
+            <div class="xp-row-val">minecraft anarchy server · seasonal world border · discord bot (nifty) <span class="xp-tag">live</span></div>
+          </div>
+          <div class="xp-row">
+            <div class="xp-row-key">nifty</div>
+            <div class="xp-row-val">discord.js bot · application management · season automation <span class="xp-tag">wip</span></div>
+          </div>
+          <div class="xp-row">
+            <div class="xp-row-key">vocaloid stuff</div>
+            <div class="xp-row-val">synthesizer v · solaria · teto · gumi · logic pro <span class="xp-tag">soon</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="xp-content-title">stack</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">linux</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">node.js</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">discord.js</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">paper mc</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">synthesizer v</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">bash</span>
+            <span class="xp-tag" style="font-size:11px;padding:2px 8px;">nginx</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="xp-statusbar">
+    <span>therealsegfault</span>
+    <div class="xp-sb-sep"></div>
+    <span>therealsegfault.github.io</span>
+  </div>
+</div>
+
+<script src="xp-shell.js"></script>
+<script>xpInject({ title: 'home — therealsegfault', icon: 'home' });</script>
+</body>
+</html>
