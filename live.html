@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>segfault · live</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0e0e;
+      --bg2: #161616;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8e8;
+      --muted: #888;
+      --hint: #555;
+      --green: #1D9E75;
+      --green-bg: #0a2e22;
+      --green-text: #5DCAA5;
+      --blue-bg: #071e36;
+      --blue-text: #85B7EB;
+      --amber-bg: #2e1f07;
+      --amber-text: #EF9F27;
+      --purple-bg: #1a1733;
+      --purple-text: #AFA9EC;
+      --radius: 8px;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: 'Courier New', Courier, monospace; min-height: 100vh; }
+    .page { max-width: 640px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+    .back { font-size: 12px; color: var(--hint); margin-bottom: 2.5rem; cursor: pointer; text-decoration: none; display: inline-block; }
+    .back:hover { color: var(--green); }
+    .back::before { content: '← '; }
+    .page-title { font-size: 28px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; margin-bottom: 4px; }
+    .page-sub { font-size: 12px; color: var(--hint); margin-bottom: 2.5rem; }
+    .page-sub span { color: var(--green); }
+
+    .now-card {
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      background: var(--bg2);
+    }
+    .now-eyebrow { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+    .now-text { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1.45; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .now-meta { font-size: 11px; color: var(--hint); margin-top: 10px; }
+
+    .section-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hint); margin-bottom: 0.75rem; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+
+    .feed { display: flex; flex-direction: column; }
+    .entry { display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 13px 0; border-bottom: 0.5px solid var(--border); align-items: start; }
+    .entry:last-child { border-bottom: none; }
+    .entry-time { font-size: 11px; color: var(--hint); padding-top: 3px; white-space: nowrap; }
+    .entry-text { font-size: 14px; color: var(--muted); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.5; }
+    .tag { display: inline-block; font-size: 10px; border-radius: 5px; padding: 1px 7px; margin-right: 6px; font-family: 'Courier New', monospace; vertical-align: middle; }
+    .tag-code    { color: var(--purple-text); background: var(--purple-bg); }
+    .tag-music   { color: var(--amber-text);  background: var(--amber-bg); }
+    .tag-server  { color: var(--blue-text);   background: var(--blue-bg); }
+    .tag-life    { color: var(--green-text);  background: var(--green-bg); }
+
+    .loading { font-size: 13px; color: var(--hint); padding: 2rem 0; }
+    .error   { font-size: 13px; color: #E24B4A; padding: 1rem 0; }
+
+    @media (max-width: 480px) {
+      .page { padding: 2rem 1.25rem 4rem; }
+      .now-text { font-size: 17px; }
+      .entry { grid-template-columns: 70px 1fr; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="index.html">therealsegfault</a>
+  <div class="page-title">now<span style="color:var(--green);">_</span></div>
+  <div class="page-sub">what's happening · <span id="sync-time">syncing...</span></div>
+
+  <div id="now-card" class="now-card">
+    <div class="now-eyebrow">right now</div>
+    <div class="now-text loading">loading...</div>
+  </div>
+
+  <div class="section-label">recent</div>
+  <div id="feed" class="feed"><div class="loading">loading feed...</div></div>
+</div>
+
+<script>
+const REPO = 'therealsegfault/my-page';
+const FILE = 'nows.json';
+const RAW  = 'https://raw.githubusercontent.com/' + REPO + '/main/' + FILE;
+
+function timeAgo(iso) {
+  const s = Math.round((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)   return s + 's ago';
+  if (s < 3600) return Math.round(s / 60) + 'm ago';
+  if (s < 86400)return Math.round(s / 3600) + 'h ago';
+  if (s < 604800)return Math.round(s / 86400) + 'd ago';
+  return new Date(iso).toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
+function tagClass(t) {
+  const map = {code:'tag-code', music:'tag-music', server:'tag-server', life:'tag-life'};
+  return map[t] || 'tag-life';
+}
+
+async function load() {
+  try {
+    const r = await fetch(RAW + '?t=' + Date.now());
+    const nows = await r.json();
+    if (!nows.length) return;
+
+    const latest = nows[0];
+    document.getElementById('now-card').innerHTML =
+      '<div class="now-eyebrow">right now</div>' +
+      '<div class="now-text">' + latest.text + '</div>' +
+      '<div class="now-meta">' + timeAgo(latest.ts) + '</div>';
+
+    const rest = nows.slice(1);
+    if (!rest.length) {
+      document.getElementById('feed').innerHTML = '<div class="loading" style="color:var(--hint);font-size:12px;">nothing yet</div>';
+      return;
+    }
+    document.getElementById('feed').innerHTML = rest.map(n =>
+      '<div class="entry">' +
+        '<div class="entry-time">' + timeAgo(n.ts) + '</div>' +
+        '<div class="entry-text">' +
+          (n.tag ? '<span class="tag ' + tagClass(n.tag) + '">' + n.tag + '</span>' : '') +
+          n.text +
+        '</div>' +
+      '</div>'
+    ).join('');
+
+    document.getElementById('sync-time').innerHTML =
+      'last updated <span>' + timeAgo(latest.ts) + '</span>';
+  } catch(e) {
+    document.getElementById('feed').innerHTML = '<div class="error">could not load feed</div>';
+  }
+}
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>
